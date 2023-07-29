@@ -1,0 +1,22 @@
+[package]
+name = "mdbook-nixdoc"
+version = "0.1.0"
+authors = ["Adisbladis <adisbladis@gmail.com>"]
+description = "A preprocessor for mdbook which pipes Nix files through Nixdoc"
+license = "MPL-2.0"
+documentation = "https://docs.rs/mdbook-nixdoc"
+repository = "https://github.com/adisbladis/mdbook-nixdoc"
+readme = "README.md"
+keywords = ["mdbook", "nix", "nixdoc", "markdown", "commonmark"]
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.71"
+mdbook = { version = "0.4.32", default-features = false }
+serde = { version = "1.0.163", features = ["derive"] }
+serde_json = "1.0.96"
+clap = { version = "4.3.19", features = ["derive"] }
+semver = "1.0.17"
+
+[dev-dependencies]
+pretty_assertions = "1.3.1"
