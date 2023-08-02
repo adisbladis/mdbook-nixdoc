@@ -53,7 +53,9 @@
 
             packages.default = craneLib.buildPackage {
               src = self;
-              nativeBuildInputs = [ pkgs.nixdoc ];
+              nativeBuildInputs =
+                [ pkgs.nixdoc ]
+                ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.iconv ];
             };
           };
       };
