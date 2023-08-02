@@ -31,7 +31,12 @@
         ];
 
         flake.githubActions = nix-github-actions.lib.mkGithubMatrix {
-          checks = { inherit (self.checks) x86_64-linux; };
+          checks = {
+            inherit (self.checks) x86_64-linux;
+            x86_64-darwin = {
+              inherit (self.packages.x86_64-darwin) default;
+            };
+          };
         };
 
         perSystem = { pkgs, system, ... }:
