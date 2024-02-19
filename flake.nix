@@ -10,10 +10,6 @@
 
     nix-github-actions.url = "github:nix-community/nix-github-actions";
     nix-github-actions.inputs.nixpkgs.follows = "nixpkgs";
-
-
-    crane.url = "github:ipetkov/crane";
-    crane.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, nix-github-actions, ... }@inputs:
@@ -40,9 +36,6 @@
         };
 
         perSystem = { pkgs, system, ... }:
-          let
-            craneLib = inputs.crane.lib.${system};
-          in
           {
             treefmt.imports = [ ./dev/treefmt.nix ];
 
@@ -56,12 +49,7 @@
               ];
             };
 
-            packages.default = craneLib.buildPackage {
-              src = self;
-              nativeBuildInputs =
-                [ pkgs.nixdoc ]
-                ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.iconv ];
-            };
+            packages.default = pkgs.callPackage self { };
           };
       };
 }
