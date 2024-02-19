@@ -4,6 +4,8 @@
 , rustc
 , pkg-config
 , nixdoc
+, iconv
+, lib
 }:
 
 stdenv.mkDerivation {
@@ -20,7 +22,8 @@ stdenv.mkDerivation {
     rustc
     pkg-config
     nixdoc
-  ];
+  ]
+  ++ lib.optionals stdenv.isDarwin [ iconv ];
 
   cargoDeps = rustPlatform.importCargoLock {
     lockFile = ./Cargo.lock;
