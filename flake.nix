@@ -1,55 +1,66 @@
 {
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
-
-    treefmt-nix.url = "github:numtide/treefmt-nix";
-    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
-
     nix-github-actions.url = "github:nix-community/nix-github-actions";
     nix-github-actions.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, nix-github-actions, ... }@inputs:
+  outputs = { self, nixpkgs, nix-github-actions }: (
     let
       inherit (nixpkgs) lib;
-
+      forAllSystems = lib.genAttrs lib.systems.flakeExposed;
     in
-    inputs.flake-parts.lib.mkFlake
-      { inherit inputs; }
-      {
-        systems = lib.systems.flakeExposed;
-
-        imports = [
-          inputs.treefmt-nix.flakeModule
-        ];
-
-        flake.githubActions = nix-github-actions.lib.mkGithubMatrix {
-          checks = {
-            inherit (self.checks) x86_64-linux;
-            x86_64-darwin = {
-              inherit (self.packages.x86_64-darwin) default;
-            };
+    {
+      flake.githubActions = nix-github-actions.lib.mkGithubMatrix {
+        checks = {
+          inherit (self.checks) x86_64-linux;
+          x86_64-darwin = {
+            inherit (self.packages.x86_64-darwin) default;
           };
         };
-
-        perSystem = { pkgs, system, ... }:
-          {
-            treefmt.imports = [ ./dev/treefmt.nix ];
-
-            checks = self.packages.${system};
-
-            devShells.default = pkgs.mkShell {
-              packages = [
-                pkgs.rustc
-                pkgs.cargo
-                pkgs.nixdoc
-              ];
-            };
-
-            packages.default = pkgs.callPackage self { };
-          };
       };
+
+      checks =
+        forAllSystems
+        (
+          system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          {
+            mdbook-nixdoc = self.packages.${system}.default;
+
+            rustfmt = pkgs.runCommand "rustfmt-check" { nativeBuildInputs = [ pkgs.rustfmt]; } ''
+              rustfmt --check ${self}/src/*.rs
+              touch $out
+            '';
+
+          }
+        );
+
+      packages =
+        forAllSystems
+        (
+          system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          {
+            default = pkgs.callPackage ./default.nix { };
+          }
+        );
+
+      devShells =
+        forAllSystems
+        (
+          system:
+          let
+            pkgs = nixpkgs.legacyPackages.${system};
+          in
+          {
+            default = pkgs.callPackage ./shell.nix { };
+          }
+        );
+    }
+  );
 }
